@@ -1,0 +1,3 @@
+/home/amir/Projects/MultithreadedServer/cmake-build-debug/CMakeFiles/MultithreadedServer.dir
+/home/amir/Projects/MultithreadedServer/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/amir/Projects/MultithreadedServer/cmake-build-debug/CMakeFiles/rebuild_cache.dir
