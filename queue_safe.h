@@ -46,8 +46,10 @@ public:
 
     size_t size(){
         std::lock_guard<std::mutex> lk(mu);
-        queue.size();
+        return queue.size();
     }
+
+
 
 private:
     std::mutex mu;

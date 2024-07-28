@@ -5,29 +5,40 @@
 #ifndef MULTITHREADEDSERVER_SERVER_H
 #define MULTITHREADEDSERVER_SERVER_H
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-
 #include <iostream>
 #include <string>
 #include <vector>
 #include <thread>
 #include <future>
 
+#include "queue_safe.h"
+#include "calculation.h"
+
 
 class Server{
 public:
 
-    Server(int port):port{port}{}
+    Server(int port, double precision, double left, double right):
+    port{port}, precision{precision}, left{left}, right{right}
+    {
+        /* Считаем, что пределы интегрирования должны удовлетворять данным условиям */
+        if(left >= right || right - left <= precision ){
+            data_is_correct = false;
+            std::cout << "Warning: incorrect interval [left, right]" << std::endl;
+        }
+        /* Если precision < 0, то будет осуществлена только одна итерация */
+        if(precision < 0){
+            data_is_correct = false;
+            std::cout << "Warning: precision must be positive" << std::endl;
+        }
 
-    void createServer(){
+        data_is_correct = true;
+    }
+
+    void create_server(){
 
         memset(&hints, 0, sizeof hints);
-        hints.ai_family = AF_UNSPEC;  // использовать IPv4 или IPv6, нам неважно
+        hints.ai_family = AF_INET;  // использовать IPv4
         hints.ai_socktype = SOCK_STREAM;
         hints.ai_flags = AI_PASSIVE;     // Заполните для меня мой IP
         getaddrinfo(NULL, std::to_string(port).c_str(), &hints, &res);
@@ -50,48 +61,104 @@ public:
         }
     }
 
+    // Пуск сервера
     void start(){
 
         is_up = true;
 
-        int client_sockfd;
-        struct sockaddr address;
-        auto addrlen = sizeof(sockaddr_in);
+        std::thread new_client_handler{
+            [&](){
+                int client_sockfd;
+                struct sockaddr address;
+                auto addrlen = sizeof(sockaddr_in);
 
-        while(is_up){
+                while(is_up){
+                    client_sockfd = accept(sockfd, &address, (socklen_t *)&addrlen);
 
-            client_sockfd = accept(sockfd, &address, (socklen_t *)&addrlen);
-
-            client_sockets.push_back(client_sockfd);
-
-            std::thread thr{client_handler, client_sockfd, std::ref(is_up)};
-            thr.detach();
-
-            connections.emplace_back(std::move(thr));
-
-        }
-
-    }
-
-    static void client_handler(int sockfd, bool& serv_is_up){
-        bool stop = false;
-        char buffer[150];
-        int buffer_ptr = 0;
-
-        std::string msg = "Hello! Send me something\n\r";
-
-        sendMsg(sockfd, msg);
-
-        while(!stop && serv_is_up){
-            if(recv_str(sockfd, buffer, 150, buffer_ptr)){
-                if(send_str(sockfd, buffer, buffer_ptr))
-                    continue;
+                    if(set_keep_alive(client_sockfd))
+                        client_sockets.push(client_sockfd);
                 }
-            else
-                break;
+            }
+        };
+        new_client_handler.detach();
+    }
+
+    void stop(){
+        is_up = false;
+    }
+
+    // Пуск решения задачи
+    double start_task(){
+        if(data_is_correct)
+            std::cout << "RESULT: " << сalculate_task() << std::endl;
+        else{
+            std::cout << "Change input data" << std::endl;
         }
     }
 
+    // Метод асинхронного, многопоточного вычисления
+    double сalculate_task(){
+
+        double current_summ{0.0};
+        double previous_summ{0.0};
+
+        for( ; this->N <= client_sockets.size(); this->N = this->N * 2)
+            ;
+
+        do {
+            previous_summ = current_summ;
+            Iteration iteration{this->left, this->right, this->N};
+            current_summ = iteration.calculate_async(client_sockets);
+        }
+        while(current_summ - previous_summ > this->precision);
+
+        close_connections();
+
+        return current_summ;
+    }
+
+    void close_connections(){
+        while(!this->client_sockets.empty()){
+            auto sock = client_sockets.front_pop();
+            close(*sock);
+        }
+    }
+
+
+    bool set_keep_alive(int fd)
+    {
+        int val = 1;
+
+        // Turn on the keepalive mechanism
+        if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val)) == -1)
+        {
+            std::cout << strerror(errno);
+            return false;
+        }
+
+        /* Send first probe after interval. */
+        if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &val, sizeof(val)) < 0) {
+            std::cout << strerror(errno);
+            return false;
+        }
+
+        /* Send next probes after the specified interval. */
+        if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &val, sizeof(val)) < 0) {
+            std::cout << strerror(errno);
+            return false;
+        }
+
+        /* Consider the socket in error state after three we send three ACK
+         * probes without getting a reply. */
+        val = 2;
+        if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &val, sizeof(val)) < 0) {
+            std::cout << strerror(errno);
+            return false;
+        }
+
+        /* Success */
+        return true;
+    }
 
 
 
@@ -103,8 +170,16 @@ private:
     struct addrinfo hints, *res;
     int sockfd;// сначала заполним адресные структуры ф-ей getaddrinfo():
     int port;
-    std::vector<int> client_sockets;
-    std::vector<std::thread> connections;
+
+    queue_safe<int> client_sockets;
+
+    double left{0.0};
+    double right{0.0};
+    double precision{0.0};
+    int N{1024};
+
+    bool data_is_correct;
+
 
 };
 
