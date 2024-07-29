@@ -32,11 +32,9 @@ class Iteration{
 public:
 
     Iteration(double left, double right, int N):
-    left{left}, right{right}, N{N}
-    {
-        task_create();
-    }
+    left{left}, right{right}, N{N}{}
 
+    // метод в котором происходит взаимодействие с клиентом
     static Result client_interaction(int client_fd, Task task){
         auto& [id, left, right, N] = task;
         std::string result;
@@ -51,7 +49,12 @@ public:
         return {id, true, std::stof(result), client_fd};
     }
 
+    // асинхронное выполнение задач
     double calculate_async(queue_safe<int>& clients_queue){
+
+        this->client_number = clients_queue.size();
+
+        task_create();
 
         while(!tasks.empty()){
 
@@ -75,14 +78,27 @@ public:
         return result;
     }
 
+    // создаем задачи для каждого клиента
     void task_create(){
         double l = this->left;
         double r = 0;
-        int n = this->N / client_number;
-        auto dx = (this->right - this->left) / client_number;
+        int n = this->N / client_number;                            // количество точек для каждого клиента
+        auto dx = (this->right - this->left) / N;                   // ширина дипазаона для одной точки
 
-        for (int i = 0; i <= client_number; ++i) {
-            r = l + dx;
+        int i = 0;
+        for ( ; i < N % client_number; ++i) {    // раздали задания
+            r = l + (n + 1) * dx ;
+            tasks.emplace(i, Task{
+                    .task_id = i,
+                    .left = l,
+                    .right = r,
+                    .N = n + 1
+            });
+            l = r;
+        }
+
+        for (  ; i < client_number; ++i) {
+            r = l + n * dx;
             tasks.emplace(i, Task{
                 .task_id = i,
                 .left = l,

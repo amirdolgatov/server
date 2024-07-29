@@ -20,6 +20,10 @@ public:
         servaddr.sin_port = htons(port);
     }
 
+    ~Client(){
+        close(sockfd);
+    }
+
     void create_client(){
         if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
             perror("socket:");
@@ -37,9 +41,12 @@ public:
         std::string input;
         std::string output;
         while(recvMsg(sockfd, input)){
+            std::cout << "I get task" << std::endl;
             auto result = command_handler(input);
             output = std::to_string(result);
+            std::cout << "answer " << output << std::endl;
             sendMsg(sockfd, output);
+            std::cout << "I send answer" << std::endl;
             input.clear();
             output.clear();
         }
