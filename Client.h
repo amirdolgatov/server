@@ -37,16 +37,17 @@ public:
         }
     }
 
+    // начало взаимодействия с сервером
     void start(){
         std::string input;
         std::string output;
         while(recvMsg(sockfd, input)){
-            std::cout << "I get task" << std::endl;
+            // std::cout << "I get task" << std::endl;
             auto result = command_handler(input);
-            output = std::to_string(result);
+            // output = std::to_string(result);
             std::cout << "answer " << output << std::endl;
             sendMsg(sockfd, output);
-            std::cout << "I send answer" << std::endl;
+            // std::cout << "I send answer" << std::endl;
             input.clear();
             output.clear();
         }
