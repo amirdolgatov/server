@@ -75,8 +75,9 @@ public:
         return summ * dx;
     }
 
-    double f(double x){
-        return x*x - x;
+    double f(double arg){
+	double epsilon = 0.000000001;
+	return sin( 1./ (arg + epsilon));
     }
 
     int sockfd;
