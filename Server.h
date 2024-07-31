@@ -65,7 +65,7 @@ public:
     void start(){
 
         is_up = true;
-
+        /* прием подлючений происходит в отдельном потоке */
         std::thread new_client_handler{
             [&](){
                 int client_sockfd;
@@ -99,8 +99,8 @@ public:
     // Метод асинхронного, многопоточного вычисления
     double сalculate_task(){
 
-        double current_summ{0.0};
-        double previous_summ{0.0};
+        double current_summ{0.0};    // текущий результат
+        double previous_summ{0.0};   // предыдущий результат
 
         for( ; this->N <= client_sockets.size(); this->N = this->N * 2)
             ;
@@ -108,7 +108,7 @@ public:
         do {
             previous_summ = current_summ;
             Iteration iteration{this->left, this->right, this->N};
-            current_summ = iteration.calculate_async(client_sockets);
+            current_summ = iteration.calculate_async(client_sockets);  // раздать задачи клентам
         }
         while(current_summ - previous_summ > this->precision);
 
@@ -168,10 +168,10 @@ private:
 
     bool is_up{false};
     struct addrinfo hints, *res;
-    int sockfd;// сначала заполним адресные структуры ф-ей getaddrinfo():
+    int sockfd;
     int port;
 
-    queue_safe<int> client_sockets;
+    queue_safe<int> client_sockets;  // очередь с дескрипторами клиентов
 
     double left{0.0};
     double right{0.0};
