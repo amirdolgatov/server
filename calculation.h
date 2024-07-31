@@ -27,7 +27,10 @@ struct Result{
 };
 
 
-
+/* Класс выполнит одну итерацию
+ * Итерация это расчет суммы с параметрами left, right, N
+ * N точек будет распределено на количество клиентов
+ */
 class Iteration{
 public:
 
@@ -37,12 +40,12 @@ public:
     // метод в котором происходит взаимодействие с клиентом
     static Result client_interaction(int client_fd, Task task){
         auto& [id, left, right, N] = task;
-        std::string result;
-        std::string task_str = std::to_string(left) + " " + std::to_string(right) + " " + std::to_string(N);
+        std::string result;                           /* сообщение с результатом расчета */
+        std::string task_str = std::to_string(left) + " " + std::to_string(right) + " " + std::to_string(N); /* сообщение "left right N" */
         if(!sendMsg(client_fd, task_str))
             return {id, false, 0.0, client_fd};
 
-        if(!recvMsg(client_fd, result)){
+        if(!recvMsg(client_fd, result)){             /* сообщение с результатом расчета */
             return {id, false, 0.0, client_fd};
         }
 
