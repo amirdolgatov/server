@@ -53,6 +53,7 @@ public:
         }
     }
 
+    // обработка команды сервера
     double command_handler(const std::string& msg){
         std::vector<std::string> commands;
         splitMsg(msg, commands);
@@ -66,6 +67,7 @@ public:
             return 0.0;
     }
 
+    // вычисление интеграла
     double task_resolve(double left, double right, int N){
         double l = 0.0;
         double summ = 0.0;
