@@ -37,21 +37,24 @@ public:
         }
     }
 
+    // начало взаимодействия с сервером
     void start(){
         std::string input;
         std::string output;
         while(recvMsg(sockfd, input)){
             std::cout << "I'am " << sockfd << ", I get task" << std::endl;
+            // std::cout << "I get task" << std::endl;
             auto result = command_handler(input);
-            output = std::to_string(result);
+            // output = std::to_string(result);
             std::cout << "answer " << output << std::endl;
             sendMsg(sockfd, output);
-            std::cout << "I send answer" << std::endl;
+            // std::cout << "I send answer" << std::endl;
             input.clear();
             output.clear();
         }
     }
 
+    // обработка команды сервера
     double command_handler(const std::string& msg){
         std::cout << "I'm going to resolve task " << std::endl;
         std::vector<std::string> commands;
@@ -67,6 +70,7 @@ public:
             return 0.0;
     }
 
+    // вычисление интеграла
     double task_resolve(double left, double right, int N){
         double l = 0.0;
         double summ = 0.0;
@@ -77,8 +81,9 @@ public:
         return summ * dx;
     }
 
-    double f(double x){
-        return x*x - x;
+    double f(double arg){
+	double epsilon = 0.000000001;
+	return sin( 1./ (arg + epsilon));
     }
 
     int sockfd;

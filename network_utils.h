@@ -18,6 +18,8 @@
 
 #define MSG_SIZE 40
 
+
+/* отправить строку в сокет*/
 bool static sendMsg(int sockfd, std::string& str){
     int bytes = 0;
     int msg_len = str.size();
@@ -54,6 +56,7 @@ bool static recv_str(int sockfd, char* buffer, int len, int& received_bytes){
     return true;
 }
 
+/* прочитать строку из сокета */
 static bool recvMsg(int sockfd, std::string& str){
     auto received_bytes = 0;
     char buffer[MSG_SIZE];
@@ -65,6 +68,7 @@ static bool recvMsg(int sockfd, std::string& str){
     return true;
 }
 
+/* разделить строку на слова */
 static bool splitMsg(const std::string& msg, std::vector<std::string>& tmp_vec){
     std::string tmp_str;
     int i = 0;
