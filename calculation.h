@@ -61,12 +61,13 @@ public:
             for(auto& [id, task]: tasks){
                 if(!clients_queue.empty()){
                     auto client_fd = *clients_queue.front_pop();
-                    futures.emplace_back(std::async(client_interaction, client_fd, task));
+                    futures.emplace_back(std::async(std::launch::async, client_interaction, client_fd, task));
                 }
             }
 
             for(auto& future: futures){
                 auto [id, success, value, client_fd] = future.get();
+                std::cout << "future " << client_fd << std::endl;
                 if(success){
                     clients_queue.push(client_fd);
                     result += value;

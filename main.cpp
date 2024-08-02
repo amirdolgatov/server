@@ -17,6 +17,17 @@ int main() {
     double left = 0.0;
     double right = 10.0;
 
+//    std::vector<std::string> str;
+//
+//    splitMsg("0.32221 1.77765 100", str);
+//
+//
+//    for (auto& it: str) {
+//        std::cout << it << std::endl;
+//    }
+
+    Client client_("0.0.0.0", 7090);
+
     std::vector<Client> clients;
     std::vector<std::thread> th;
 
@@ -24,7 +35,7 @@ int main() {
     server.create_server();
     server.start();
 
-    for(int i = 0; i < 2; ++i){
+    for(int i = 0; i < 4; ++i){
         clients.emplace_back("0.0.0.0", 7090);
     }
 
@@ -42,7 +53,9 @@ int main() {
     server.start_task();
     server.stop();
 
-//    Iteration iteration{left, right, 355};
+
+
+//    Iteration iteration{left, right, 2000};
 //    iteration.client_number = 85;
 //    iteration.task_create();
 //
@@ -50,10 +63,12 @@ int main() {
 //        std::cout << task.left << " " << task.right << " " << task.N << std::endl;
 //    }
 
-//    for (int i = 1; i < 200000; i = i * 2 ) {
-////        std::cout << "N: " << i << ", s = " << (double)client.task_resolve(left, right, i) << std::endl;
-//        printf("N %d,\t s = %f\n", i, client.task_resolve(left, right, i));
-//    }
+std::cout << std::endl;
+
+    for (int i = 1; i < 200000; i = i * 2 ) {
+//        std::cout << "N: " << i << ", s = " << (double)client.task_resolve(left, right, i) << std::endl;
+        printf("N %d,\t s = %f\n", i, client_.task_resolve(left, right, i));
+    }
 
     return 0;
 }

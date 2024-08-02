@@ -41,7 +41,7 @@ public:
         std::string input;
         std::string output;
         while(recvMsg(sockfd, input)){
-            std::cout << "I get task" << std::endl;
+            std::cout << "I'am " << sockfd << ", I get task" << std::endl;
             auto result = command_handler(input);
             output = std::to_string(result);
             std::cout << "answer " << output << std::endl;
@@ -53,11 +53,13 @@ public:
     }
 
     double command_handler(const std::string& msg){
+        std::cout << "I'm going to resolve task " << std::endl;
         std::vector<std::string> commands;
         splitMsg(msg, commands);
         auto left = std::stod(commands[0]);
         auto right = std::stod(commands[1]);
         auto N = std::stod(commands[2]);
+        std::cout << "I'm going to resolve task " << std::endl;
         if(left < right && N > 0){
             return task_resolve(left, right, N);
         }

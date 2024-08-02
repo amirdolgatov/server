@@ -68,11 +68,12 @@ static bool recvMsg(int sockfd, std::string& str){
 static bool splitMsg(const std::string& msg, std::vector<std::string>& tmp_vec){
     std::string tmp_str;
     int i = 0;
-    while(i != msg.size()){
-        for ( ; msg[i] != ' ' && std::isdigit(msg[i]); tmp_str.push_back(msg[i++]))
+    while(i < msg.size()){
+        for ( ; msg[i] != ' ' && (std::isdigit(msg[i]) || msg[i] == '.'); tmp_str.push_back(msg[i++]))
             ;
         tmp_vec.push_back(tmp_str);
         tmp_str.clear();
+        ++i;
     }
 }
 
