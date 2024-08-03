@@ -109,6 +109,7 @@ public:
             previous_summ = current_summ;
             Iteration iteration{this->left, this->right, this->N};
             current_summ = iteration.calculate_async(client_sockets);  // раздать задачи клентам
+            N  = N * 2;
         }
         while(current_summ - previous_summ > this->precision);
 

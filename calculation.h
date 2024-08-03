@@ -70,7 +70,6 @@ public:
 
             for(auto& future: futures){
                 auto [id, success, value, client_fd] = future.get();
-                std::cout << "future " << client_fd << std::endl;
                 if(success){
                     clients_queue.push(client_fd);
                     result += value;
@@ -88,6 +87,7 @@ public:
         double r = 0;
         int n = this->N / client_number;                            // количество точек для каждого клиента
         auto dx = (this->right - this->left) / N;                   // ширина дипазаона для одной точки
+        int k = 0;
 
         int i = 0;
         for ( ; i < N % client_number; ++i) {    // раздали задания
@@ -98,6 +98,8 @@ public:
                     .right = r,
                     .N = n + 1
             });
+            k = k + n + 1;
+            std::cout << "Task create " << i << " " << l << " " << r << " " << n + 1 <<  " " << k << std::endl;
             l = r;
         }
 
@@ -109,6 +111,8 @@ public:
                 .right = r,
                 .N = n
             });
+            k = k + n;
+            std::cout << "Task create " << i << " " << l << " " << r << " " << n << " " << k << std::endl;
             l = r;
         }
     }

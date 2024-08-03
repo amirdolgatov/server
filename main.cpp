@@ -35,7 +35,7 @@ int main() {
     server.create_server();
     server.start();
 
-    for(int i = 0; i < 4; ++i){
+    for(int i = 0; i < 10; ++i){
         clients.emplace_back("0.0.0.0", 7090);
     }
 

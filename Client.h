@@ -42,13 +42,9 @@ public:
         std::string input;
         std::string output;
         while(recvMsg(sockfd, input)){
-            std::cout << "I'am " << sockfd << ", I get task" << std::endl;
-            // std::cout << "I get task" << std::endl;
             auto result = command_handler(input);
-            // output = std::to_string(result);
-            std::cout << "answer " << output << std::endl;
+            output = std::to_string(result);
             sendMsg(sockfd, output);
-            // std::cout << "I send answer" << std::endl;
             input.clear();
             output.clear();
         }
@@ -56,13 +52,11 @@ public:
 
     // обработка команды сервера
     double command_handler(const std::string& msg){
-        std::cout << "I'm going to resolve task " << std::endl;
         std::vector<std::string> commands;
         splitMsg(msg, commands);
         auto left = std::stod(commands[0]);
         auto right = std::stod(commands[1]);
         auto N = std::stod(commands[2]);
-        std::cout << "I'm going to resolve task " << std::endl;
         if(left < right && N > 0){
             return task_resolve(left, right, N);
         }
@@ -72,18 +66,20 @@ public:
 
     // вычисление интеграла
     double task_resolve(double left, double right, int N){
-        double l = 0.0;
+        double l = left;
         double summ = 0.0;
         double dx = (right - left) / N;
         for (int i = 0; i < N; ++i) {
             summ += f(l + (i + 0.5) * dx);
         }
+        std::cout << left << " " << right << " " << N << " " << summ * dx << std::endl;
         return summ * dx;
     }
 
     double f(double arg){
-	double epsilon = 0.000000001;
-	return sin( 1./ (arg + epsilon));
+//	double epsilon = 0.000000001;
+//	return sin( 1./ (arg + epsilon));
+        return sin(arg);
     }
 
     int sockfd;
