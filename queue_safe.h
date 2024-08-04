@@ -9,6 +9,11 @@
 #include<mutex>
 #include<memory>
 
+
+/*!
+ * Очередь с блокировкой одновременного доступа
+ * @tparam T
+ */
 template<typename T>
 class queue_safe{
 public:

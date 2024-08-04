@@ -3,42 +3,39 @@
 #include "Server.h"
 #include "Client.h"
 
-
+/*!
+ * Пример вычислений
+ */
 int main() {
 
-//    Server server{4046, 0.00001, 0.0, 10.0};
-//
-//    server.create_server();
-//    server.start();
-//
-//    sleep(5);
-//    server.stop();
+    int port = 7090;
 
     double left = 0.0;
-    double right = 10.0;
+    double right = 1.0;
+    double precision = 0.000000000000000000000000000000000001;
 
-//    std::vector<std::string> str;
-//
-//    splitMsg("0.32221 1.77765 100", str);
-//
-//
-//    for (auto& it: str) {
-//        std::cout << it << std::endl;
-//    }
 
-    Client client_("0.0.0.0", 7090);
-
+    int cli_number = 50;
     std::vector<Client> clients;
-    std::vector<std::thread> th;
+    std::vector<std::thread> client_threads;
 
-    Server server{7090, 0.00000001, 0.0, 10.0};
+    /*!
+     * Создаем, запускаем сервер
+     */
+    Server server{port, precision, left, right};
     server.create_server();
     server.start();
 
-    for(int i = 0; i < 10; ++i){
-        clients.emplace_back("0.0.0.0", 7090);
+    /*!
+     * Создаем клиентов
+     */
+    for(int i = 0; i < cli_number; ++i){
+        clients.emplace_back("0.0.0.0", port);
     }
 
+    /*!
+     * Запускаем клиентов в отдельных потоках
+     */
     for (auto& client: clients) {
         client.create_client();
         std::thread thr{
@@ -47,28 +44,13 @@ int main() {
             }
         };
         thr.detach();
-        th.emplace_back(std::move(thr));
+        client_threads.emplace_back(std::move(thr));
     }
 
+    // запуск решения задачи
     server.start_task();
+
     server.stop();
-
-
-
-//    Iteration iteration{left, right, 2000};
-//    iteration.client_number = 85;
-//    iteration.task_create();
-//
-//    for (auto [id, task]: iteration.tasks)  {
-//        std::cout << task.left << " " << task.right << " " << task.N << std::endl;
-//    }
-
-std::cout << std::endl;
-
-    for (int i = 1; i < 200000; i = i * 2 ) {
-//        std::cout << "N: " << i << ", s = " << (double)client.task_resolve(left, right, i) << std::endl;
-        printf("N %d,\t s = %f\n", i, client_.task_resolve(left, right, i));
-    }
 
     return 0;
 }

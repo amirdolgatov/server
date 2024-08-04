@@ -9,9 +9,17 @@
 #include <vector>
 #include <cmath>
 
+/*!
+ * Описание клиента - исполнителя
+ */
 class Client{
 public:
 
+    /*!
+     * Конструктор
+     * @param addr адрес сервера
+     * @param port порт сервера
+     */
     Client(const std::string addr, int port){
         memset(&servaddr, 0, sizeof(servaddr));
         // assign IP, PORT
@@ -24,6 +32,9 @@ public:
         close(sockfd);
     }
 
+    /*!
+     * Фактическое создание клиента, вынесено в отдельный метод
+     */
     void create_client(){
         if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
             perror("socket:");
@@ -37,26 +48,35 @@ public:
         }
     }
 
-    // начало взаимодействия с сервером
+
+    /*!
+     * Запуск взаимодействия с сервером
+     */
     void start(){
-        std::string input;
-        std::string output;
-        while(recvMsg(sockfd, input)){
-            auto result = command_handler(input);
+        std::string input;                          //< входящее сообщение
+        std::string output;                         //< исхоядщее сообщение
+        while(recvMsg(sockfd, input)){              //< получено задание
+            auto result = command_handler(input);   //< распарсить задание, выполнить его
             output = std::to_string(result);
-            sendMsg(sockfd, output);
+            sendMsg(sockfd, output);                //< вернуть ответ серверу
             input.clear();
             output.clear();
         }
     }
 
-    // обработка команды сервера
+
+
+    /*!
+     * Обработка сообщения (команды) и решение задачи
+     * @param msg сообщение сервера
+     * @return значение интеграла
+     */
     double command_handler(const std::string& msg){
-        std::vector<std::string> commands;
-        splitMsg(msg, commands);
-        auto left = std::stod(commands[0]);
-        auto right = std::stod(commands[1]);
-        auto N = std::stod(commands[2]);
+        std::vector<std::string> parameters;
+        splitMsg(msg, parameters);
+        auto left = std::stod(parameters[0]);
+        auto right = std::stod(parameters[1]);
+        auto N = std::stod(parameters[2]);
         if(left < right && N > 0){
             return task_resolve(left, right, N);
         }
@@ -64,7 +84,14 @@ public:
             return 0.0;
     }
 
-    // вычисление интеграла
+
+    /*!
+     * Вычисление интеграла
+     * @param left нижний предел интегрирования
+     * @param right верхний предел интегрирования
+     * @param N количество точек
+     * @return сумма
+     */
     double task_resolve(double left, double right, int N){
         double l = left;
         double summ = 0.0;
@@ -72,14 +99,18 @@ public:
         for (int i = 0; i < N; ++i) {
             summ += f(l + (i + 0.5) * dx);
         }
-        std::cout << left << " " << right << " " << N << " " << summ * dx << std::endl;
         return summ * dx;
     }
 
+    /*!
+     * Подинтегральная функция
+     * @param arg аргумент функции
+     * @return
+     */
     double f(double arg){
-//	double epsilon = 0.000000001;
-//	return sin( 1./ (arg + epsilon));
-        return sin(arg);
+        double epsilon = 0.000000000000000000000001;
+        return sin( 1./ (arg + epsilon));
+//        return sin(arg);
     }
 
     int sockfd;

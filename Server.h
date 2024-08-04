@@ -14,10 +14,21 @@
 #include "queue_safe.h"
 #include "calculation.h"
 
-
+/*!
+ * Сервер выполняет задачу, посредством ее разделения
+ * на подзадачи и распределения подзадач среди клиентов
+ */
 class Server{
 public:
 
+    /*!
+     * Конструктор
+     * @param port порт сервера
+     * Параметры расчетной задачи:
+     * @param precision точность вычислений
+     * @param left начало диапазона
+     * @param right окончание диапазона
+     */
     Server(int port, double precision, double left, double right):
     port{port}, precision{precision}, left{left}, right{right}
     {
@@ -40,7 +51,7 @@ public:
         memset(&hints, 0, sizeof hints);
         hints.ai_family = AF_INET;  // использовать IPv4
         hints.ai_socktype = SOCK_STREAM;
-        hints.ai_flags = AI_PASSIVE;     // Заполните для меня мой IP
+        hints.ai_flags = AI_PASSIVE; // Заполните для меня мой IP
         getaddrinfo(NULL, std::to_string(port).c_str(), &hints, &res);
         // создаем сокет:
         sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -61,7 +72,11 @@ public:
         }
     }
 
-    // Пуск сервера
+
+
+    /*!
+     * Пуск сервера
+     */
     void start(){
 
         is_up = true;
@@ -75,7 +90,7 @@ public:
                 while(is_up){
                     client_sockfd = accept(sockfd, &address, (socklen_t *)&addrlen);
 
-                    if(set_keep_alive(client_sockfd))
+                    if(set_keep_alive(client_sockfd))        //< устанавливаем лимит на паузу в общении с клиентом
                         client_sockets.push(client_sockfd);
                 }
             }
@@ -83,41 +98,57 @@ public:
         new_client_handler.detach();
     }
 
+    /*!
+     * Прекращение приема подключений
+     */
     void stop(){
         is_up = false;
     }
 
-    // Пуск решения задачи
+
+    /*!
+     * Пуск решения задачи
+     * @return конечный результат с точностью precision
+     */
     double start_task(){
         if(data_is_correct)
-            std::cout << "RESULT: " << сalculate_task() << std::endl;
+            сalculate_task();
         else{
             std::cout << "Change input data" << std::endl;
         }
     }
 
-    // Метод асинхронного, многопоточного вычисления
+
+    /*!
+     * Метод в котором выполняется асинхронное, многопоточное вычисления
+     * суммы
+     * @return конечный результат
+     */
     double сalculate_task(){
 
-        double current_summ{0.0};    // текущий результат
-        double previous_summ{0.0};   // предыдущий результат
+        double current_summ{0.0};    //< текущий результат
+        double previous_summ{0.0};   //< предыдущий результат
 
-        for( ; this->N <= client_sockets.size(); this->N = this->N * 2)
+        for( ; this->N <= client_sockets.size(); this->N = this->N * 2)  //< увеличиваем N если это необходимо
             ;
 
         do {
             previous_summ = current_summ;
             Iteration iteration{this->left, this->right, this->N};
-            current_summ = iteration.calculate_async(client_sockets);  // раздать задачи клентам
+            current_summ = iteration.calculate_async(client_sockets);   //< раздать задачи клентам
+            std::cout << "N = " << N << ", result = " << current_summ << std::endl;
             N  = N * 2;
         }
-        while(current_summ - previous_summ > this->precision);
+        while( std::abs(current_summ - previous_summ) > this->precision);
 
         close_connections();
 
         return current_summ;
     }
 
+    /*!
+     * Закрыть все присоединенные сокеты
+     */
     void close_connections(){
         while(!this->client_sockets.empty()){
             auto sock = client_sockets.front_pop();
@@ -160,9 +191,6 @@ public:
         /* Success */
         return true;
     }
-
-
-
 
 
 private:
